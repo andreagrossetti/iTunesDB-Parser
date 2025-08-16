@@ -3,12 +3,32 @@ use std::io::{BufWriter, Write};
 use std::path::Path;
 
 use crate::helpers::helpers as io_helpers;
+use crate::itunesdb::Song;
 
 /// Minimal iTunesDB writer scaffold.
 /// NOTE: This currently writes a minimal MHBD header only, as a placeholder.
 /// We'll extend this to write MHIT/MHOD entries and optional playlists.
-pub fn write_itunesdb_from_json(_songs_json_path: &str, dest_path: &str) -> std::io::Result<()> {
-    eprintln!("[writer] Writing placeholder iTunesDB to {}", dest_path);
+pub fn write_itunesdb_from_json(songs_json_path: &str, dest_path: &str) -> std::io::Result<()> {
+    // Read songs for planning (count only for now)
+    let songs: Vec<Song> = match std::fs::read_to_string(songs_json_path) {
+        Ok(s) => match serde_json::from_str(&s) {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("[writer] Failed to parse JSON at '{}': {}. Proceeding with 0 songs.", songs_json_path, e);
+                Vec::new()
+            }
+        },
+        Err(e) => {
+            eprintln!("[writer] Could not read '{}': {}. Proceeding with 0 songs.", songs_json_path, e);
+            Vec::new()
+        }
+    };
+
+    eprintln!(
+        "[writer] Writing placeholder iTunesDB to {} ({} songs in plan)",
+        dest_path,
+        songs.len()
+    );
 
     // Write to temp, then atomic rename
     let dest = Path::new(dest_path);

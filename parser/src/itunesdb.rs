@@ -10,9 +10,9 @@ use crate::constants::itunesdb_constants;
 use crate::helpers::helpers;
 use crate::helpers::itunesdb_helpers;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Podcast {
     pub podcast_title: String,
     pub podcast_publisher: String,
@@ -43,7 +43,7 @@ impl Podcast {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Song {
     pub file_extension: String,
     pub bitrate_kbps: u32,
