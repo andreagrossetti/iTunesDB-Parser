@@ -37,6 +37,9 @@ mod itunesprefs;
 mod itunessd;
 mod photo_database;
 mod preferences;
+mod writer {
+    pub mod itunesdb_writer;
+}
 
 use std::io::Read;
 
@@ -57,6 +60,39 @@ fn main() {
 
     let itunesdb_file_path = std::path::Path::new(&itunesdb_filename);
 
+    // Default to "csv" if no format specified
+    let output_format = if args.len() > 3 {
+        match args[3].to_lowercase().as_str() {
+            "json" => "json",
+            "csv" => "csv",
+            "write" => "write",
+            _ => {
+                eprintln!("Invalid format specified. Using default 'csv'");
+                "csv"
+            }
+        }
+    } else {
+        "csv"
+    };
+
+    // Early handling for writer mode: allow creating a new iTunesDB without requiring an existing file
+    let itunesdb_file_type: String = std::env::args()
+        .nth(2)
+        .expect("Missing second parameter: iTunes DB file type");
+
+    if itunesdb_file_type == "itunes" && output_format == "write" {
+        // By default, read songs from music.json in current directory
+        let songs_json_path = "music.json";
+        eprintln!(
+            "[writer] Writing new iTunesDB to '{}' from '{}'",
+            itunesdb_filename, songs_json_path
+        );
+        if let Err(e) = writer::itunesdb_writer::write_itunesdb_from_json(songs_json_path, &itunesdb_filename) {
+            panic!("Failed to write iTunesDB: {}", e);
+        }
+        return;
+    }
+
     if !itunesdb_file_path.exists() {
         panic!(
             "No itunesDB file with that name '{}' exists",
@@ -73,20 +109,6 @@ fn main() {
         );
     }
 
-    // Default to "csv" if no format specified
-    let output_format = if args.len() > 3 {
-        match args[3].to_lowercase().as_str() {
-            "json" => "json",
-            "csv" => "csv",
-            _ => {
-                eprintln!("Invalid format specified. Using default 'csv'");
-                "csv"
-            }
-        }
-    } else {
-        "csv"
-    };
-
     let mut itunesdb_file_as_bytes = Vec::new();
 
     // https://stackoverflow.com/questions/47660946/why-does-a-file-need-to-be-mutable-to-call-readread-to-string
@@ -96,9 +118,7 @@ fn main() {
         .read_to_end(&mut itunesdb_file_as_bytes)
         .unwrap();
 
-    let itunesdb_file_type: String = std::env::args()
-        .nth(2)
-        .expect("Missing second parameter: iTunes DB file type");
+    // itunesdb_file_type already parsed above
 
     let desired_report_csv_filename = itunesdb_filename.to_string() + ".csv";
 

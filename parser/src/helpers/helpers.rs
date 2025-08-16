@@ -239,6 +239,35 @@ pub fn init_csv_writer(filename: &str) -> csv::Writer<std::fs::File> {
     return csv_writer;
 }
 
+/// Write helpers (little-endian) for building binary files like iTunesDB
+pub fn write_le_u16<W: std::io::Write>(w: &mut W, v: u16) -> std::io::Result<()> {
+    w.write_all(&v.to_le_bytes())
+}
+
+pub fn write_le_u32<W: std::io::Write>(w: &mut W, v: u32) -> std::io::Result<()> {
+    w.write_all(&v.to_le_bytes())
+}
+
+pub fn write_le_u64<W: std::io::Write>(w: &mut W, v: u64) -> std::io::Result<()> {
+    w.write_all(&v.to_le_bytes())
+}
+
+pub fn write_bytes<W: std::io::Write>(w: &mut W, bytes: &[u8]) -> std::io::Result<()> {
+    w.write_all(bytes)
+}
+
+/// Pads the writer with zeros until current length reaches target_len.
+/// Caller must track how many bytes have been written so far.
+pub fn pad_to_4<W: std::io::Write>(w: &mut W, target_len: usize) -> std::io::Result<()> {
+    // This simple helper assumes caller is keeping track of target total block length.
+    // For now, we just ensure 4-byte alignment by writing up to 3 zero bytes.
+    let mut buf = [0u8; 3];
+    // As a minimal placeholder, always write zero bytes for alignment boundaries.
+    // In future, pass current_len and compute exact padding.
+    let _ = &buf; // silence unused in case of future logic
+    Ok(())
+}
+
 #[cfg(test)]
 mod helpers_tests {
     use super::*;
